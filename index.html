@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="RptJoyHEHiG1XMRTUgflTB">
+<head data-page-node-id="FFKKJRZrHv3cgSCnXAUHXz">
+<meta charset="UTF-8" data-page-node-id="7iZ2TXikWmbTJ1K9VL5z6G">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" data-page-node-id="AKvRQR2xtnyorYC9YAKa5g">
+<title>遗失月冕</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Crect%20width='32'%20height='32'%20rx='6'%20fill='%230b0810'/%3E%3Ccircle%20cx='16'%20cy='16'%20r='9'%20fill='%23ffd166'/%3E%3Ccircle%20cx='13'%20cy='13'%20r='3'%20fill='%23ff6b8a'/%3E%3Ccircle%20cx='19'%20cy='18'%20r='2.4'%20fill='%23ff9ecb'/%3E%3C/svg%3E">
+<meta name="description" content="遗失月冕 —— 纯前端像素风生存射击，全部美术与音乐由代码实时程序化生成。">
+<meta name="theme-color" content="#0b0810">
+<meta property="og:title" content="遗失月冕">
+<meta property="og:description" content="纯前端像素风生存射击：守住星芒法阵，夺回遗失的月冕。">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<style>
+  :root{
+    --ink:#f4ecff; --dim:#9d92b8; --gold:#ffd166; --rose:#ff6b8a;
+    --hp:#ff5470; --hp2:#ff9aa8; --panel:rgba(18,14,28,.72); --line:rgba(255,209,102,.35);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;height:100dvh;overflow:hidden;background:#0b0810;
+    font-family:"DotGothic16","Zpix","Fusion Pixel","Courier New",monospace;
+    color:var(--ink);user-select:none;-webkit-font-smoothing:none}
+  #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    height:100dvh;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+  #stage{position:relative;line-height:0;box-shadow:0 0 0 2px #241a33,0 0 60px rgba(255,107,138,.12)}
+  canvas{display:block;image-rendering:pixelated;image-rendering:crisp-edges}
+
+  /* ---------- HUD ---------- */
+  .hud{position:absolute;inset:0;pointer-events:none;font-size:12px;letter-spacing:1px}
+  .hud *{line-height:1.2}
+
+  .topleft{position:absolute;left:10px;top:84px;width:210px}
+  .namebar{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px;
+    text-shadow:0 2px 0 #000}
+  .lv{color:var(--gold);font-size:13px}
+  .bar{height:12px;background:#241a2e;border:2px solid #120c1c;position:relative;overflow:hidden}
+  .bar > i{display:block;height:100%;width:100%;transition:width .18s linear}
+  .hp > i{background:linear-gradient(180deg,var(--hp2),var(--hp))}
+  .xp > i{background:linear-gradient(180deg,#8ce0ff,#3aa0ff)}
+  .bar > span{position:absolute;inset:0;text-align:center;font-size:10px;line-height:12px;
+    text-shadow:0 1px 0 #000,0 0 3px #000}
+  .xpwrap{margin-top:4px;height:9px}
+  .xpwrap .bar{height:9px}
+  .ammotop{margin-top:5px;font-size:10px;color:var(--gold);letter-spacing:1px;text-shadow:0 1px 0 #000}
+
+  .topright{position:absolute;right:10px;top:10px;text-align:right}
+  .clock{font-size:22px;color:var(--gold);text-shadow:0 2px 0 #000}
+  .wave{margin-top:2px;color:#ffb3c1;text-shadow:0 2px 0 #000}
+  .kill{margin-top:4px;color:var(--dim);font-size:11px}
+
+  .goal{position:absolute;left:50%;top:12px;transform:translateX(-50%);
+    background:rgba(12,8,20,.7);border:1px solid var(--line);padding:3px 12px;
+    font-size:11px;color:#ffe6a8;white-space:nowrap}
+
+  /* 武器 / 技能 */
+  .dock{position:absolute;right:10px;bottom:116px;display:flex;align-items:flex-end;gap:8px;
+    pointer-events:auto;touch-action:manipulation}
+  .slot{width:46px;height:46px;border:2px solid #3a2c4d;background:var(--panel);
+    position:relative;display:flex;align-items:center;justify-content:center;
+    cursor:pointer;touch-action:manipulation}
+  .slot.big{width:58px;height:58px;border-color:var(--line)}
+  .slot canvas{width:32px;height:32px}
+  .slot.big canvas{width:42px;height:42px}
+  .key{position:absolute;left:-2px;top:-2px;background:#ffd166;color:#241a08;
+    font-size:9px;padding:0 3px;font-weight:bold}
+  .cd{position:absolute;inset:0;background:rgba(8,4,14,.72);
+    display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff}
+  .slot .lbl{position:absolute;bottom:-9px;right:0;font-size:9px;color:var(--dim)}
+  .ammo{position:absolute;left:0;bottom:-14px;font-size:11px;color:var(--gold);white-space:nowrap}
+  .ammoName{position:absolute;right:0;top:-13px;font-size:9px;color:var(--dim);letter-spacing:2px}
+
+  /* ---------- 职业切换条 ---------- */
+  .classbar{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);
+    display:flex;align-items:center;gap:10px;pointer-events:auto}
+  .cslot{display:flex;align-items:center;gap:6px;padding:5px 10px;
+    background:var(--panel);border:2px solid #3a2c4d;cursor:pointer;opacity:.5;
+    transition:opacity .15s,border-color .15s,background .15s}
+  .cslot canvas{width:22px;height:22px}
+  .cslot .cn{font-size:11px;color:var(--dim);letter-spacing:1px}
+  .cslot:hover{opacity:.9;border-color:#6b5890}
+  .cslot.on{opacity:1;border-color:var(--gold);background:rgba(62,44,18,.78)}
+  .cslot.on .cn{color:var(--gold)}
+  .cswap{font-size:10px;color:var(--gold);min-width:88px;text-align:center;
+    padding:4px 8px;border:1px solid var(--line);background:rgba(12,8,20,.7);letter-spacing:1px}
+  .cswap.wait{color:#8a7fa8;border-color:#3a2c4d}
+
+  /* ---------- 升级卡 ---------- */
+  #levelup{position:absolute;inset:0;background:rgba(8,5,14,.78);display:none;
+    align-items:center;justify-content:center;flex-direction:column;pointer-events:auto}
+  #levelup.on{display:flex}
+  #levelup h2{font-size:20px;color:var(--gold);margin-bottom:2px;
+    text-shadow:0 3px 0 #000;letter-spacing:4px}
+  #levelup p{font-size:11px;color:var(--dim);margin-bottom:16px}
+  .cards{display:flex;gap:16px}
+  .card{width:132px;padding:12px 10px 14px;background:linear-gradient(180deg,#2a2038,#1a1428);
+    border:2px solid #4a3a63;text-align:center;cursor:pointer;transition:transform .12s,border-color .12s;
+    position:relative}
+  .card:hover{transform:translateY(-6px);border-color:var(--gold)}
+  .card canvas{width:40px;height:40px;margin-bottom:6px;image-rendering:pixelated}
+  .card .t{font-size:13px;color:#fff;margin-bottom:4px}
+  .card .d{font-size:10px;color:#b9aed0;line-height:1.5}
+  .card .r{position:absolute;top:-9px;left:50%;transform:translateX(-50%);
+    font-size:9px;padding:1px 6px;letter-spacing:1px}
+  .r.c1{background:#6b7280;color:#fff}
+  .r.c2{background:#2f9e6b;color:#fff}
+  .r.c3{background:#8b5cf6;color:#fff}
+
+  /* ---------- 死亡 / 开始 ---------- */
+  #over{position:absolute;inset:0;background:rgba(8,5,14,.86);display:none;
+    align-items:center;justify-content:center;flex-direction:column;pointer-events:auto}
+  #over.on{display:flex}
+  #over h1{font-size:30px;color:var(--rose);letter-spacing:6px;text-shadow:0 4px 0 #000;margin-bottom:8px}
+  #over .st{font-size:12px;color:var(--dim);margin-bottom:18px;text-align:center;line-height:1.8}
+  #over .st b{color:var(--gold);font-size:16px}
+  .btn{pointer-events:auto;background:var(--gold);color:#241a08;border:none;
+    padding:9px 26px;font-family:inherit;font-size:14px;cursor:pointer;letter-spacing:2px}
+  .btn:hover{background:#fff}
+  /* ---------- 右上角：玩法说明 / 设置面板 ---------- */
+  #topbtns{position:absolute;right:10px;top:10px;display:none;gap:8px;z-index:6}
+  #topbtns.on{display:flex}
+  .tbtn{pointer-events:auto;background:var(--panel);border:2px solid #3a2c4d;color:var(--ink);
+    font-family:inherit;font-size:11px;letter-spacing:1px;padding:6px 10px;cursor:pointer}
+  .tbtn:hover{border-color:#6b5890}
+  .panel{position:absolute;right:10px;top:44px;width:252px;max-width:calc(100vw - 20px);display:none;z-index:9;
+    background:rgba(14,10,24,.97);border:2px solid var(--line);padding:10px 12px;text-align:left}
+  .panel.on{display:block}
+  .ptitle{font-size:12px;color:var(--gold);letter-spacing:3px;margin-bottom:8px;text-align:center}
+  .pbody{font-size:10px;color:#9d92b8;line-height:1.9;margin-bottom:6px}
+  .pbody b{color:#c9bde6}
+  .prow{display:flex;align-items:center;gap:8px;margin:9px 0;font-size:11px;color:var(--ink)}
+  .prow > span{width:60px;color:#9d92b8;font-size:10px;letter-spacing:1px}
+  .prow input[type=range]{flex:1;min-width:0;accent-color:var(--gold);cursor:pointer}
+  .prow b{width:32px;text-align:right;color:var(--gold);font-size:10px}
+  .tgl{background:var(--panel);border:2px solid #3a2c4d;color:var(--ink);font-family:inherit;
+    font-size:11px;padding:3px 14px;cursor:pointer;min-width:46px}
+  .tgl.on{background:var(--gold);color:#241a08;border-color:var(--gold)}
+  .pclose{display:block;margin:10px auto 0;background:transparent;color:var(--gold);
+    border:1px solid var(--line);font-family:inherit;font-size:11px;padding:4px 18px;cursor:pointer}
+  .pclose:hover{background:rgba(255,209,102,.12)}
+  .pfoot{display:flex;gap:8px;justify-content:center;margin-top:12px}
+  .pfoot .pclose{margin:0}
+  .pmini{background:transparent;color:#9d92b8;border:1px solid var(--line);
+    font-family:inherit;font-size:11px;padding:4px 12px;cursor:pointer}
+  .pmini:hover{color:var(--gold);border-color:var(--gold)}
+
+  /* ---------- 触屏普攻键（右下角） ---------- */
+  #atkBtn{position:absolute;right:16px;bottom:16px;width:86px;height:86px;border-radius:50%;
+    background:radial-gradient(circle at 50% 38%,#ff8fb0,#d23b63);border:3px solid #ffd166;
+    color:#fff;font-size:15px;font-weight:bold;letter-spacing:2px;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+    pointer-events:auto;touch-action:none;user-select:none;-webkit-user-select:none;
+    box-shadow:0 4px 0 #8a1f3c, 0 0 18px rgba(255,107,138,.5);text-shadow:0 2px 0 #8a1f3c}
+  #atkBtn:active{transform:translateY(3px);box-shadow:0 1px 0 #8a1f3c, 0 0 18px rgba(255,107,138,.5)}
+  @media (hover:hover) and (pointer:fine){ #atkBtn{opacity:.5} }
+
+  /* ---------- 虚拟摇杆（左下角移动键） ---------- */
+  #moveBtn{position:absolute;left:16px;bottom:16px;width:112px;height:112px;border-radius:50%;
+    background:radial-gradient(circle at 50% 50%,rgba(46,34,68,.5),rgba(20,14,30,.62));
+    border:2px solid var(--line);pointer-events:auto;touch-action:none;user-select:none;
+    -webkit-user-select:none;overflow:hidden}
+  #moveKnob{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;
+    border-radius:50%;background:radial-gradient(circle at 50% 38%,#c3acff,#6b4fb0);
+    border:2px solid #fff;box-shadow:0 0 10px rgba(140,110,200,.6);pointer-events:none}
+
+  /* ---------- 左上角控制簇：全屏 + 暂停 + 自动攻击 ---------- */
+  .ctrlrow{position:absolute;left:10px;top:38px;display:flex;gap:8px;pointer-events:auto;z-index:8}
+  .ctrlbtn{border:2px solid var(--line);background:var(--panel);color:var(--ink);
+    font-size:12px;font-weight:bold;letter-spacing:1px;height:40px;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;
+    user-select:none;-webkit-user-select:none;touch-action:manipulation}
+  .ctrlbtn.on{background:var(--gold);color:#241a08;border-color:var(--gold);
+    box-shadow:0 0 12px rgba(255,209,102,.55)}
+  #pauseBtn{width:40px;border-radius:50%;font-size:15px}
+  #autoBtn{padding:0 12px;border-radius:20px;min-width:98px;white-space:nowrap}
+
+  /* ---------- 左上角：全屏按钮（透明） ---------- */
+  #fsBtn{width:40px;border-radius:50%;font-size:16px;
+    background:rgba(18,14,28,.28);border:2px solid var(--line);color:var(--ink)}
+  #fsBtn:hover{background:rgba(18,14,28,.5)}
+  #fsBtn:active{transform:translateY(2px)}
+  #fsBtn.on{background:var(--gold);color:#241a08;border-color:var(--gold);
+    box-shadow:0 0 12px rgba(255,209,102,.55)}
+
+  /* 大厅（首页）左上角：全屏进入按钮（透明，复用 .fs-btn 绑定） */
+  #lobbyFs{position:absolute;left:10px;top:10px;width:40px;height:40px;border-radius:50%;
+    font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;
+    pointer-events:auto;user-select:none;-webkit-user-select:none;touch-action:manipulation;z-index:8;
+    background:rgba(18,14,28,.28);border:2px solid var(--line);color:var(--ink)}
+  #lobbyFs:hover{background:rgba(18,14,28,.5)}
+  #lobbyFs:active{transform:translateY(2px)}
+  #lobbyFs.on{background:var(--gold);color:#241a08;border-color:var(--gold);
+    box-shadow:0 0 12px rgba(255,209,102,.55)}
+
+  /* ---------- 首次载入：透明全屏提示 ---------- */
+  #fsHint{position:absolute;inset:0;z-index:30;display:flex;align-items:center;
+    justify-content:center;flex-direction:column;pointer-events:auto;
+    background:transparent;opacity:0;visibility:hidden;transition:opacity .35s}
+  #fsHint.on{opacity:1;visibility:visible}
+  .fshint-card{background:rgba(12,8,20,.42);border:1px solid var(--line);
+    border-radius:14px;padding:18px 22px;text-align:center;max-width:80vw;
+    box-shadow:0 0 30px rgba(0,0,0,.35);backdrop-filter:blur(2px)}
+  .fshint-card .t{font-size:14px;color:var(--ink);letter-spacing:2px;margin-bottom:6px}
+  .fshint-card .s{font-size:11px;color:var(--dim);margin-bottom:14px;line-height:1.8}
+  .fshint-card .btns{display:flex;gap:12px;justify-content:center}
+
+  /* ---------- 暂停遮罩 ---------- */
+  #pause{position:absolute;inset:0;background:rgba(8,5,14,.82);display:none;
+    align-items:center;justify-content:center;flex-direction:column;pointer-events:auto}
+  #pause.on{display:flex}
+  #pause h2{font-size:24px;color:var(--gold);letter-spacing:6px;margin-bottom:6px;
+    text-shadow:0 3px 0 #000}
+  #pause p{font-size:11px;color:var(--dim);margin-bottom:18px}
+
+  /* ============================================================
+     设备适配：三档 UI
+     桌面 (hover+fine)  → 键鼠 UI：隐藏摇杆、保留半透明攻击键、显示 4 职业、Q/E/R 提示
+     平板 (coarse+宽)   → 触控 UI：摇杆+攻击键、显示 4 职业（点选切换）
+     手机 (coarse+窄)   → 触控 UI：摇杆+攻击键、单一切换按钮、HUD 紧凑
+     ============================================================ */
+
+  /* 桌面端：键鼠 UI（默认即桌面，这里仅收起触控专属件、保留键盘提示） */
+  @media (hover:hover) and (pointer:fine){
+    #moveBtn{display:none}                 /* 桌面隐藏虚拟摇杆（用 WASD / 方向键） */
+    #atkBtn{opacity:.5}                    /* 桌面保留半透明攻击圆钮（鼠标也能点） */
+    .slot .key{display:block}              /* 桌面显示 Q / E / R 键盘提示 */
+    .classbar .cslot{display:flex}         /* 桌面显示 4 职业，点选即切 */
+    .classbar .cswap{display:block}        /* 桌面保留「F 切换职业」提示 */
+  }
+
+  /* 触控端基础规则（手机 + 平板共用） */
+  @media (pointer:coarse){
+    #moveBtn{display:block}                /* 显示虚拟摇杆 */
+    #atkBtn{opacity:1}                     /* 攻击键全亮 */
+    .slot .key{display:none}               /* 触控端不显示 Q/E/R 字母（已可点） */
+    .dock{bottom:120px}                    /* 技能槽上移到攻击键上方 */
+    #autoBtn{min-width:108px;font-size:13px}
+    #pauseBtn{width:46px;font-size:17px}
+    .ctrlbtn{height:46px}                  /* 触控目标放大，便于点按 */
+  }
+
+  /* 平板（大屏触控）：屏幕够大，显示 4 职业直接点选，隐藏单一切换按钮 */
+  @media (pointer:coarse) and (min-width:600px){
+    .classbar{bottom:14px;gap:10px}
+    .classbar .cslot{display:flex}
+    .classbar .cswap{display:none}
+    .cslot{padding:7px 12px}
+    .cslot canvas{width:26px;height:26px}
+    .cslot .cn{font-size:12px}
+  }
+
+  /* 手机（窄屏触控）：隐藏 4 职业，仅保留居底「切换职业」按钮；HUD 略放大 */
+  @media (pointer:coarse) and (max-width:599px){
+    .classbar{bottom:18px;gap:0}
+    .classbar .cslot{display:none}
+    .classbar .cswap{display:block;min-width:108px;padding:11px 14px;font-size:12px;
+      border:2px solid var(--line);background:rgba(12,8,20,.82);border-radius:22px;
+      cursor:pointer;touch-action:manipulation;letter-spacing:1px}
+    .hud{font-size:13px}
+    .topleft{top:92px;width:200px}
+    .topright .clock{font-size:20px}
+    /* 首页整体收紧，避免溢出舞台 */
+    .lobby-title{font-size:18px;margin:6px 0 2px}
+    #lobbyGirl{width:84px;height:48px}
+    .pick{margin:5px 0}
+    .pick-h{font-size:10px;margin-bottom:4px}
+    .pick-btn{padding:6px 10px;min-width:70px;font-size:12px}
+    .swatch{width:20px;height:20px}
+    .panel{top:40px}
+    .btn.big{margin-top:10px;padding:9px 28px;font-size:14px}
+  }
+
+  /* ---------- 大厅 / 结算（覆盖层，女孩居中） ---------- */
+  .hidden{display:none !important}
+  .screen{position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+    flex-direction:column;pointer-events:auto;text-align:center;background:rgba(8,5,14,.62);
+    overflow:auto}
+  .screen.on{display:flex}
+  .lobby-girl-wrap{margin-bottom:4px}
+  #lobbyGirl{width:112px;height:64px;image-rendering:pixelated;
+    filter:drop-shadow(0 0 12px rgba(255,158,203,.55));animation:floaty 2.4s ease-in-out infinite}
+  @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+  .lobby-title{font-size:22px;color:var(--gold);letter-spacing:4px;margin:10px 0 2px;text-shadow:0 3px 0 #000}
+  .lobby-sub{font-size:11px;color:var(--dim);margin-bottom:12px}
+  .pick{margin:7px 0}
+  .pick-h{font-size:11px;color:#ffb3c1;letter-spacing:2px;margin-bottom:6px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  .pick-btn{pointer-events:auto;background:var(--panel);border:2px solid #3a2c4d;color:var(--ink);
+    padding:8px 14px;font-family:inherit;font-size:13px;cursor:pointer;min-width:82px;letter-spacing:1px;
+    display:flex;flex-direction:column;align-items:center;gap:3px;transition:border-color .15s,background .15s,transform .12s}
+  .pick-btn small{font-size:9px;color:var(--dim);letter-spacing:0}
+  .pick-btn:hover{border-color:#6b5890}
+  .pick-btn.on{border-color:var(--gold);background:rgba(62,44,18,.78);transform:translateY(-3px)}
+  .pick-btn.on small{color:#ffd9a8}
+  .swatch{width:24px;height:24px;border-radius:50%;border:2px solid #3a2c4d;padding:0;cursor:pointer;
+    pointer-events:auto;transition:border-color .15s,box-shadow .15s}
+  .swatch.on{border-color:var(--gold);box-shadow:0 0 8px rgba(255,209,102,.6)}
+  .locktip{font-size:10px;color:#8a7fa8;margin-bottom:6px;letter-spacing:1px}
+  #wingPick.locked .row{opacity:.4;pointer-events:none}
+  #wingPick:not(.locked) .locktip{color:#c9bde6}
+  .btn.big{margin-top:18px;padding:12px 40px;font-size:16px}
+  .btn.ghost{background:transparent;color:var(--gold);border:2px solid var(--gold)}
+  .btn.ghost:hover{background:rgba(255,209,102,.12)}
+  .btns{display:flex;gap:14px;margin-top:16px}
+  .win-title{font-size:28px;color:var(--gold);letter-spacing:6px;text-shadow:0 4px 0 #000;margin-bottom:8px}
+</style>
+</head>
+<body data-page-node-id="6kcdAPZDVMxUv2ApjLOM5l">
+<noscript><div style="position:fixed;inset:0;z-index:99;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;background:#0b0810;color:#ffd166;font-family:monospace;font-size:14px;letter-spacing:1px">本游戏需要启用 JavaScript 才能运行。</div></noscript>
+<div id="wrap" data-page-node-id="fx9temFLmA6I1u0gv7swwP">
+  <div id="stage" data-page-node-id="RhsjaAltfg7OwORFgU9MXC">
+    <canvas id="cv" data-page-node-id="KAebLk1lMliGoBxsfPlDve"></canvas>
+
+    <div class="hud" id="hud" data-page-node-id="U9cvUAizt9ERZBUZ7XcxL8">
+      <div class="goal" id="goal" data-page-node-id="I7iDmrp5AWPlR4DHdaYI9L">▸ 守住星芒法阵 · 达成击杀目标</div>
+
+      <div class="topleft" data-page-node-id="HsAd6ajRTW0xN0ipoHj5iH">
+        <div class="namebar" data-page-node-id="mWgMPI3x00UZu4XO0KaaPH"><span data-page-node-id="xs9a8xVkJEKMsg0q3XdoSY">月 冕 勇 者</span><span class="lv" id="lv" data-page-node-id="yBX3iTEjtZ9TlQ0z0drT2o">Lv.1</span></div>
+        <div class="bar hp" data-page-node-id="t0gIUYoRUU0N7AOqB9Uql3"><i id="hpfill" data-page-node-id="1ZF7X6jjZKYY2bB3yv6WAA"></i><span id="hptxt" data-page-node-id="4yFFmAb17ODKdva4OeHM1O">100/100</span></div>
+        <div class="xpwrap" data-page-node-id="S7ybI0Z61SRArkO2G5C5s4"><div class="bar xp" data-page-node-id="EZQe1rACZJ0XusIgQJv6jt"><i id="xpfill" style="width:0" data-page-node-id="PSjnKeTP5XBcueS442LMTZ"></i><span id="xptxt" data-page-node-id="6RnEKKD5pMsrUNjjhtayVV">0 / 50</span></div></div>
+        <div id="ammoHud" class="ammotop">架 势  06 / 06</div>
+      </div>
+
+      <div class="topright" data-page-node-id="rexQ7ZOMp7GhFyYfUJvfbY">
+        <div class="clock" id="clock" data-page-node-id="Xtmex3QTsGeT4hwqytvEP8">0:00</div>
+        <div class="wave" id="wave" data-page-node-id="omXBlM2Y6NaiwOrpDgRHfL">第 1 波 · 深度 1</div>
+        <div class="kill" id="kill" data-page-node-id="EqJrjAwDQ0DTsnzPdsoBCg">击杀 0</div>
+      </div>
+
+      <div id="atkBtn" data-page-node-id="SlHXqBIxiVcK74RVCtHD5Y">攻 击</div>
+
+      <!-- 左下角虚拟摇杆（移动键） -->
+      <div id="moveBtn" data-page-node-id="8zva9APFAfgrYxRoJIgoRQ"><div id="moveKnob" data-page-node-id="xqzXGI34LHyvzlOKUCON3f"></div></div>
+
+      <!-- 左上角控制簇：全屏 + 暂停 + 自动攻击开关 -->
+      <div class="ctrlrow" data-page-node-id="kbGc890vvtFud7iRqAhI78">
+        <div class="ctrlbtn fs-btn" id="fsBtn" title="全屏 / 退出全屏">⛶</div>
+        <div class="ctrlbtn" id="pauseBtn" data-page-node-id="4PvgwR3EXYdXWv5H57ezjt">‖</div>
+        <div class="ctrlbtn" id="autoBtn" data-page-node-id="rWLHZWHiDYs1HZB1pkniwk">自动攻击 关</div>
+      </div>
+
+      <div class="dock" data-page-node-id="ElMNGgWPnQERbFJ1DvVyUQ">
+        <div class="slot" data-skill="q" data-page-node-id="zY3gglRk1HkDyxdbO1rNgk"><span class="key" data-page-node-id="AAgdBI8M9SoaensrW86P6K">Q</span><canvas id="icQ" width="16" height="16" data-page-node-id="ywLsAmaYNwtmBiITygiACq"></canvas><div class="cd" id="cdQ" style="display:none" data-page-node-id="NVoSWTcjQIQnglFPurOwDh"></div><span class="lbl" data-page-node-id="yy7qf16dqEgh9vEdwGWCqx">旋风</span></div>
+        <div class="slot" data-skill="e" data-page-node-id="ZZGtcOgSTp8UQ7oDqRHVrI"><span class="key" data-page-node-id="EJOViCgiaGZN8itpObqvES">E</span><canvas id="icE" width="16" height="16" data-page-node-id="3dWuVQBEWLNTt9KNt7VwsT"></canvas><div class="cd" id="cdE" style="display:none" data-page-node-id="SrwR989JHACjd8lvCywpRO"></div><span class="lbl" data-page-node-id="Sm09JGjk7mnHth2GUVus6j">星冲</span></div>
+        <div class="slot" data-skill="r" data-page-node-id="EuedqZPBeFEnNf3Ppw4ou6"><span class="key" data-page-node-id="SVCUvKreWIsphg72aw5KSV">R</span><canvas id="icR" width="16" height="16" data-page-node-id="FZq4uOiiQ54CvOux2QBqoN"></canvas><div class="cd" id="cdR" style="display:none" data-page-node-id="ocTSGsfu7QKzIxSXqWSEme"></div><span class="lbl" data-page-node-id="lQKMNXHBdBOVm7NFJu1HLC">月华</span></div>
+      </div>
+
+      <div class="classbar" data-page-node-id="RZmmTkWDP6RsGJKzmVf83F">
+        <div class="cslot" id="clW" data-page-node-id="oRL0ntVjL22sVl4ypxi4VY">
+          <canvas id="icCW" width="16" height="16" data-page-node-id="vAtvBSSe1cssLnMKx1rfb8"></canvas>
+          <span class="cn" data-page-node-id="6HnSofcmRhGe1CPhNEJuDf">战士</span>
+        </div>
+        <div class="cslot" id="clM" data-page-node-id="lNLvQHZtB9MxNQ5pbDQnN0">
+          <canvas id="icCM" width="16" height="16" data-page-node-id="TfFMyQcGo5T2WcgSTOUv2A"></canvas>
+          <span class="cn" data-page-node-id="tIf5Pv2klaEonvHRWYEaoF">法师</span>
+        </div>
+        <div class="cslot" id="clG" data-page-node-id="7VwfNABPGOb8Dbhm2S3DAp">
+          <canvas id="icCG" width="16" height="16" data-page-node-id="fihCOLOapiTAevTqdSaXfT"></canvas>
+          <span class="cn" data-page-node-id="AhAnVkyRAwnkq7rbPzbzTO">枪手</span>
+        </div>
+        <div class="cslot" id="clA" data-page-node-id="ZqzOrq12fSvGAzte9KDtbF">
+          <canvas id="icCA" width="16" height="16" data-page-node-id="vq96AxGhM12ef3FT6Hc8wL"></canvas>
+          <span class="cn" data-page-node-id="y3Xuu3nObOLjTe7Kg25Mxd">游侠</span>
+        </div>
+        <div class="cswap" id="swapInfo" data-page-node-id="OOb81xjHhbBREbRyhsI01o">F 切换职业 · 就绪</div>
+      </div>
+
+      <!-- 左下角原本的玩法说明已移到首页大厅（.howto），此处留给移动端的虚拟摇杆 -->
+    </div>
+
+    <div id="levelup" data-page-node-id="Js178SyTKbNexAUAHsI6wq">
+      <h2 data-page-node-id="5dBo4q8DVaBVYYCLx6UHFG">境 界 提 升</h2>
+      <p id="lvlsub" data-page-node-id="wj6DqZbVdHD75gNlJxqMt7">选择一枚祝福铭刻于身</p>
+      <div class="cards" id="cards" data-page-node-id="ytDiFbHCeHSVtsjqsM43NW"></div>
+    </div>
+
+    <div id="pause" data-page-node-id="Vq5OS7FiOmLfvjPLOCulRj">
+      <h2 data-page-node-id="QM0iNC8fN5uuGrZGjkkZGk">已 暂 停</h2>
+      <p data-page-node-id="gaHrV41XOSfaYhRXuTKhvK">休整片刻，月冕仍在等待</p>
+      <div class="btns" data-page-node-id="xyM3VwkXEXOsKYpUHHWCYr">
+        <button class="btn" id="pResume" data-page-node-id="gfOJVw8M5A5cxV3ocNaJxr">继 续 游 戏</button>
+        <button class="btn ghost" id="pSet">设 置</button>
+        <button class="btn ghost" id="pHome" data-page-node-id="vDUWNUrPWsPjzEfTjsEPKf">返 回 大 厅</button>
+      </div>
+    </div>
+
+    <div id="lobby" class="screen on" data-page-node-id="nvlAqYMwLbMl24EOD1CTwY">
+      <div class="ctrlbtn fs-btn" id="lobbyFs" title="全屏 / 退出全屏">⛶</div>
+      <div class="lobby-girl-wrap" data-page-node-id="tiNKn8GTmQhuDDd7mUbHhX"><canvas id="lobbyGirl" width="56" height="32" data-page-node-id="lw0U7DmI0KOE0bwgqTMF7t"></canvas></div>
+      <h1 class="lobby-title" data-page-node-id="L3XQXjA5ETqrN4YUDRtQEe">遗 失 月 冕</h1>
+      <p class="lobby-sub" data-page-node-id="AiBCvQBI9R9wsvZ94KueXC">选择难度与职业，夺回遗失的月冕</p>
+      <div class="pick" data-page-node-id="1Gs8yJwqWGADlRQ8B87xsL">
+        <div class="pick-h" data-page-node-id="PbimUhLthRMrIneGAqLn3U">难 度</div>
+        <div class="row" id="diffRow" data-page-node-id="qzpiNaJ03DSnFvdQ5MFkpk">
+          <button class="pick-btn" data-d="easy" data-page-node-id="wKTi5RNhZn1safVitXEdWN">简单<small data-page-node-id="YqOL1lAbUZXFRH2iq71KMT">1000 杀</small></button>
+          <button class="pick-btn on" data-d="normal" data-page-node-id="Y1YojJMDG96Hzp90dwLTdw">中等<small data-page-node-id="4HPnunu6RdFKIF3yrS1xll">5000 杀</small></button>
+          <button class="pick-btn" data-d="hard" data-page-node-id="XBFK60U2JFfCArqbkzz1Sd">困难<small data-page-node-id="4Jj17VO3fDdQZMW54MR9GD">10000 杀</small></button>
+        </div>
+      </div>
+      <div class="pick" data-page-node-id="uXZre54ZqB2DQgOmlYVEhU">
+        <div class="pick-h" data-page-node-id="exbX9w8BtSDBq9tznkRRn3">职 业</div>
+        <div class="row" id="clsRow" data-page-node-id="oKFqZVniM6nPEvqFb07EQn">
+          <button class="pick-btn on" data-c="warrior" data-page-node-id="ccMZGUxavgGPDrjknzQ3xv">战士<small data-page-node-id="YFqRMN8IYRclOYjDQKK0Pr">剑·近战</small></button>
+          <button class="pick-btn" data-c="mage" data-page-node-id="fAAfBj5rqU2KZUMKeSgfY8">法师<small data-page-node-id="35k7pCreNLoBBsGWbcTGHH">杖·魔弹</small></button>
+          <button class="pick-btn" data-c="gunner" data-page-node-id="5vpRYfblmopqAACFpcHgHa">枪手<small data-page-node-id="TXwaxWNyCoikMkpXFTJusx">重铳·慢射高伤</small></button>
+          <button class="pick-btn" data-c="archer" data-page-node-id="Dnb2YjZknupar49x8pzoqR">游侠<small data-page-node-id="keTNImTiLbCTruwd73Y4qq">疾射·贯穿三敌</small></button>
+        </div>
+      </div>
+      <div class="pick" data-page-node-id="RuB1h13fG8LRjCtCjD4ApW">
+        <div class="pick-h" data-page-node-id="moU7h8vlOWlcLP7CKVDvsB">性 别</div>
+        <div class="row" id="genRow" data-page-node-id="tcOx6MV4t4GJwITvVJ7VLe">
+          <button class="pick-btn on" data-g="f" data-page-node-id="YRfNu4jb2QPa1n9OL2h8q3">女生<small data-page-node-id="YDzKFoKKICYOSRAL5tzXob">裙装</small></button>
+          <button class="pick-btn" data-g="m" data-page-node-id="yZIXxKMq6Nxs3kexGNgKGi">男生<small data-page-node-id="eMWXK6c81DGMIDRbeFb6iy">裤装</small></button>
+        </div>
+      </div>
+      <div class="pick" id="wingPick" data-page-node-id="wingPick">
+        <div class="pick-h" data-page-node-id="wingH">翅 膀（奖励）</div>
+        <p class="locktip" id="wingLock" data-page-node-id="wingLock">🔒 累计击杀 0 / 50000 解锁</p>
+        <div class="row" id="wingRow" data-page-node-id="wingRow">
+          <button class="pick-btn on" data-w="1" data-page-node-id="wingOn">穿 上</button>
+          <button class="pick-btn" data-w="0" data-page-node-id="wingOff">脱 下</button>
+        </div>
+        <div class="row" id="wingColorRow" data-page-node-id="wingColorRow" style="margin-top:8px">
+          <button class="swatch on" data-col="#ffffff" style="background:#ffffff" data-page-node-id="wc0"></button>
+          <button class="swatch" data-col="#ffd166" style="background:#ffd166" data-page-node-id="wc1"></button>
+          <button class="swatch" data-col="#ff6b8a" style="background:#ff6b8a" data-page-node-id="wc2"></button>
+          <button class="swatch" data-col="#7fd8ff" style="background:#7fd8ff" data-page-node-id="wc3"></button>
+          <button class="swatch" data-col="#b388ff" style="background:#b388ff" data-page-node-id="wc4"></button>
+          <button class="swatch" data-col="#8ce36b" style="background:#8ce36b" data-page-node-id="wc5"></button>
+          <button class="swatch" data-col="#ff9a3c" style="background:#ff9a3c" data-page-node-id="wc6"></button>
+        </div>
+      </div>
+      <button class="btn big" id="startBtn" data-page-node-id="xPAlyWjLuC6RLNn1LylZuQ">开 始 游 戏</button>
+    </div>
+
+    <div id="win" class="screen" data-page-node-id="fB9RQUxs5u8DUFO4JjF8oq">
+      <h1 class="win-title" data-page-node-id="aXWTtfo5WDTVTGlTGx7U08">月 冕 重 辉</h1>
+      <div class="st" id="winst" data-page-node-id="qKzHJF6oCalw1vswYz9qRH"></div>
+      <div class="btns" data-page-node-id="AJf82K8MQHVMXeCBQG0wyI">
+        <button class="btn" id="winHome" data-page-node-id="MqKYz0cVvEyJNSvxKKzrOF">返 回 大 厅</button>
+        <button class="btn ghost" id="winAgain" data-page-node-id="2wXPj7iAXnr8laI1QcuVFC">再 来 一 局</button>
+      </div>
+    </div>
+
+    <div id="over" data-page-node-id="SEJujBq4Ivyiy3auBNfIxS">
+      <h1 data-page-node-id="DqxKVXWcRU5VkHPklf32iH">月 冕 陨 落</h1>
+      <div class="st" id="overst" data-page-node-id="ai7vVDWuemOW5DKMJ23YPM"></div>
+      <div class="btns" data-page-node-id="PZIZsO0VCtosDLuQ7hejr0">
+        <button class="btn" id="overHome" data-page-node-id="hFC0JAJlSNH0aHpuULyG7N">返 回 大 厅</button>
+        <button class="btn ghost" id="again" data-page-node-id="NhxScfch9fBOA9DGVahe4G">再 战 一 次</button>
+      </div>
+    </div>
+    <!-- 右上角：玩法说明 / 设置 / 法律声明（点击展开面板） -->
+    <div id="topbtns">
+      <button class="tbtn" id="helpBtn">玩法说明</button>
+      <button class="tbtn" id="setBtn">设 置</button>
+      <button class="tbtn" id="legalBtn">法律声明</button>
+    </div>
+
+    <!-- 首次载入：透明全屏提示（点击进入全屏或暂不打扰） -->
+    <div id="fsHint">
+      <div class="fshint-card">
+        <div class="t">建 议 全 屏 游 玩</div>
+        <div class="s">点击「进入全屏」获得更沉浸的体验<br>也可稍后点左上角按钮随时切换</div>
+        <div class="btns">
+          <button class="btn" id="fsGo">进 入 全 屏</button>
+          <button class="pmini" id="fsSkip">暂 不</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="helpPanel">
+      <div class="ptitle">玩 法 说 明</div>
+      <div class="pbody">
+        <b>目标</b> 守住星芒法阵，达成击杀目标即胜利，阵亡则本局结束。<br>
+        <b>移动</b> 键盘 WASD 控制方向。<br>
+        <b>攻击</b> 自动锁定最近的怪物，按住鼠标左键或右下角攻击键开火；也可开「自动攻击」托管。<br>
+        <b>技能</b> Q 玫瑰旋风 · E 星辉冲刺 · R 月华绽放 · 空格 翻滚闪避。<br>
+        <b>职业</b> F 切换 战士／法师／枪手／游侠（15 秒冷却）。<br>
+        <b>翅膀</b> 累计击杀达 5 万解锁，穿上后获得「羽护」减伤 25%。
+      </div>
+      <button class="pclose" data-close="helpPanel">关 闭</button>
+    </div>
+
+    <div class="panel" id="setPanel">
+      <div class="ptitle">设 置</div>
+      <div class="prow"><span>主 音 量</span><input type="range" id="volRange" min="0" max="100" step="1"><b id="volVal">70</b></div>
+      <div class="prow"><span>背景音乐</span><button class="tgl" id="musBtn">开</button></div>
+      <div class="prow"><span>音 效</span><button class="tgl" id="sfxBtn">开</button></div>
+      <div class="prow"><span>亮 度</span><input type="range" id="briRange" min="60" max="130" step="1"><b id="briVal">100</b></div>
+      <div class="pfoot">
+        <button class="pmini" id="resetSet">恢 复 默 认</button>
+        <button class="pclose" data-close="setPanel">关 闭</button>
+      </div>
+    </div>
+
+    <div class="panel" id="legalPanel">
+      <div class="ptitle">法 律 声 明</div>
+      <div class="pbody">
+        <b>免责声明</b> 本游戏按「现状」提供给您用于个人娱乐，不保证无任何差错或中断；作者不对任何使用后果承担责任。<br>
+        <b>版权与资产</b> 全部程序代码、像素美术、场景与背景音乐／音效均为本作原创，由代码<b>实时程序化生成</b>，<b>未使用、未复制、未嵌入任何第三方受版权保护的图片、音频、视频或字体文件</b>。角色、场景、音乐皆为独立创作，与任何现有商业作品无关联。<br>
+        <b>字体说明</b> 仅通过 CSS <code>font-family</code> 引用系统自带等宽字体（DotGothic16／Zpix／Fusion Pixel 优先，缺失时回退 Courier New／monospace），<b>未加载任何外部字体资源</b>。<br>
+        <b>灵感说明</b> 视觉与玩法为原创实现，灵感来源于通用像素射击品类，<b>未复制任何第三方游戏的资源或代码</b>。<br>
+        <b>使用条款</b> 仅供个人非商业娱乐；如二次分发或改造，请保留本声明。
+      </div>
+      <button class="pclose" data-close="legalPanel">关 闭</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/pixel.js?v=20260906x"></script>
+<script src="js/audio.js?v=20260906x"></script>
+<script src="js/scene.js?v=20260906x"></script>
+<script src="js/upgrades.js?v=20260906x"></script>
+<script src="js/enemy.js?v=20260906x"></script>
+<script src="js/game.js?v=20260906x"></script>
+</body>
+</html>
