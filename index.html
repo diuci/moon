@@ -281,6 +281,10 @@
   @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
   .lobby-title{font-size:22px;color:var(--gold);letter-spacing:4px;margin:10px 0 2px;text-shadow:0 3px 0 #000}
   .lobby-sub{font-size:11px;color:var(--dim);margin-bottom:12px}
+/* 大厅底部：同一批内容的其他玩法。字号与像素字体保持一致，不抢开始按钮的视觉重心 */
+.lobby-more{margin-top:14px;font-size:10px;letter-spacing:1px;color:var(--dim);text-align:center;line-height:1.7}
+.lobby-more a{color:#8ce0ff;text-decoration:none;border-bottom:1px dotted rgba(140,224,255,.45)}
+.lobby-more a:hover{color:var(--gold);border-bottom-color:var(--gold)}
   .pick{margin:7px 0}
   .pick-h{font-size:11px;color:#ffb3c1;letter-spacing:2px;margin-bottom:6px}
   .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
@@ -430,6 +434,15 @@
         </div>
       </div>
       <button class="btn big" id="startBtn" data-page-node-id="xPAlyWjLuC6RLNn1LylZuQ">开 始 游 戏</button>
+      <p class="lobby-more">
+        <a href="https://lian.diuci.com/" target="_blank">连 词 成 句</a>
+        <span> · </span>
+        <a href="https://k12.diuci.com/" target="_blank">古 诗 文</a>
+        <span> · </span>
+        <a href="https://ink.diuci.com/" target="_blank">丢 词 大 作 战</a>
+        <span> · </span>
+        <a href="https://diuci.com/" target="_blank">丢 词 夺 理</a>
+      </p>
     </div>
 
     <div id="win" class="screen" data-page-node-id="fB9RQUxs5u8DUFO4JjF8oq">
